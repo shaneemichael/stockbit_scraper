@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import TokenInput from "../components/TokenInput";
-import LoadingSpinner from "../components/LoadingSpinner";
-import ErrorMessage from "../components/ErrorMessage";
-import type { SerializedStock } from "../serializer/watchlist";
+import { useAuth } from "../../context/AuthContext";
+import TokenInput from "../../components/TokenInput";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import ErrorMessage from "../../components/ErrorMessage";
+import type { SerializedStock } from "../../serializers/watchlist";
 
 interface WatchlistData {
   id: number;

@@ -6,42 +6,42 @@ import { useAuth } from "./context/AuthContext";
 
 const features = [
   {
-    href: "/watchlist",
+    href: "/pages/watchlist",
     title: "📋 Watchlist",
     description: "View your watchlist stocks with real-time prices and changes",
   },
   {
-    href: "/broker",
+    href: "/pages/broker",
     title: "🏦 Broker Activity",
     description: "View broker buy and sell transactions with detailed analytics",
   },
   {
-    href: "/profile",
+    href: "/pages/profile",
     title: "🏢 Company Profile",
     description: "Get detailed company information and background",
   },
   {
-    href: "/quote",
+    href: "/pages/quote",
     title: "💰 Stock Quote",
     description: "View current stock price, volume, and market data",
   },
   {
-    href: "/financials",
+    href: "/pages/financials",
     title: "📊 Financials",
     description: "Explore financial statements and reports",
   },
   {
-    href: "/keystats",
+    href: "/pages/keystats",
     title: "📈 Key Statistics",
     description: "View key metrics like P/E, P/B, ROE, and more",
   },
   {
-    href: "/stream",
+    href: "/pages/stream",
     title: "💬 Stream",
     description: "Read community posts and discussions about stocks",
   },
   {
-    href: "/search",
+    href: "/pages/search",
     title: "🔍 Search",
     description: "Search for stocks by name or symbol",
   },

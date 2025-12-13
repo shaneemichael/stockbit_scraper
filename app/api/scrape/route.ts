@@ -14,11 +14,11 @@ import {
 import {
   serializeWatchlist,
   serializeWatchlistSummary,
-} from "@/app/serializer/watchlist";
+} from "@/app/serializers/watchlist";
 import {
   serializeBrokerActivity,
   serializeBrokerActivitySummary,
-} from "@/app/serializer/broker";
+} from "@/app/serializers/broker";
 
 type DataType =
   | "profile"

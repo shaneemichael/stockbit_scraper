@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/watchlist", label: "Watchlist" },
-  { href: "/broker", label: "Broker" },
-  { href: "/profile", label: "Profile" },
-  { href: "/quote", label: "Quote" },
-  { href: "/financials", label: "Financials" },
-  { href: "/keystats", label: "Key Stats" },
-  { href: "/stream", label: "Stream" },
-  { href: "/search", label: "Search" },
+  { href: "/pages/watchlist", label: "Watchlist" },
+  { href: "/pages/broker", label: "Broker" },
+  { href: "/pages/profile", label: "Profile" },
+  { href: "/pages/quote", label: "Quote" },
+  { href: "/pages/financials", label: "Financials" },
+  { href: "/pages/keystats", label: "Key Stats" },
+  { href: "/pages/stream", label: "Stream" },
+  { href: "/pages/search", label: "Search" },
 ];
 
 export default function Navbar() {
