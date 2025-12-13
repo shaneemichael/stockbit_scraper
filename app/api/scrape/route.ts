@@ -9,6 +9,10 @@ import {
   getWatchlist,
   type StockbitAuthInfo,
 } from "@/lib/stockbit/api";
+import {
+  serializeWatchlist,
+  serializeWatchlistSummary,
+} from "@/app/serializer/watchlist";
 
 type DataType =
   | "profile"
@@ -17,7 +21,9 @@ type DataType =
   | "keystats"
   | "stream"
   | "search"
-  | "watchlist";
+  | "watchlist"
+  | "watchlist-summary"
+  | "watchlist-raw";
 
 /**
  * GET /api/scrape - Fetch stock data from Stockbit
@@ -124,7 +130,19 @@ export async function GET(request: NextRequest) {
         data = await searchStocks(auth, query);
         break;
 
-      case "watchlist":
+      case "watchlist": {
+        const rawData = await getWatchlist(auth);
+        data = serializeWatchlist(rawData);
+        break;
+      }
+
+      case "watchlist-summary": {
+        const rawData = await getWatchlist(auth);
+        data = serializeWatchlistSummary(rawData);
+        break;
+      }
+
+      case "watchlist-raw":
         data = await getWatchlist(auth);
         break;
 
@@ -250,8 +268,23 @@ export async function POST(request: NextRequest) {
         data = await searchStocks(auth, query);
         break;
 
-      case "watchlist":
+      case "watchlist": {
+        const rawData = await getWatchlist(auth);
+        console.log(rawData);
+        data = serializeWatchlist(rawData);
+        break;
+      }
+
+      case "watchlist-summary": {
+        const rawData = await getWatchlist(auth);
+        console.log(rawData);
+        data = serializeWatchlistSummary(rawData);
+        break;
+      }
+
+      case "watchlist-raw":
         data = await getWatchlist(auth);
+        console.log(data);
         break;
 
       default:

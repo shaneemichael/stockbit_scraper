@@ -158,14 +158,75 @@ export async function searchStocks(auth: StockbitAuthInfo, query: string) {
  * Fetch watchlist
  */
 export async function getWatchlist(auth: StockbitAuthInfo) {
-  const response = await fetch(`${STOCKBIT_API_BASE}/watchlist?page=1&limit=500`, {
-    method: "GET",
-    headers: createAuthHeaders(auth),
+  const response = await fetch(
+    `${STOCKBIT_API_BASE}/watchlist?page=1&limit=500`,
+    {
+      method: "GET",
+      headers: createAuthHeaders(auth),
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error("Watchlist error response:", errorBody);
+    throw new Error(
+      `Failed to fetch watchlist: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const response_json = await response.json();
+  const watchlistId = await response_json.data[0].watchlist_id;
+
+  const watchlist = await fetch(
+    `${STOCKBIT_API_BASE}/watchlist/${watchlistId}?page=1&limit=500&setfincol=1`,
+    {
+      method: "GET",
+      headers: createAuthHeaders(auth),
+    }
+  )
+
+  return watchlist.json();
+}
+
+/**
+ * Refresh access token response
+ */
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshAccessToken(
+  refreshToken: string
+): Promise<RefreshTokenResponse> {
+  const response = await fetch("https://api.stockbit.com/v1/refresh-token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    },
+    body: JSON.stringify({ refresh_token: refreshToken }),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch watchlist: ${response.statusText}`);
+    const errorBody = await response.text();
+    console.error("Refresh token error response:", errorBody);
+    throw new Error(
+      `Failed to refresh token: ${response.status} ${response.statusText}`
+    );
   }
 
-  return response.json();
+  const data = await response.json();
+
+  return {
+    accessToken: data.data?.access_token || data.access_token,
+    refreshToken: data.data?.refresh_token || data.refresh_token,
+    expiresIn: data.data?.expires_in || data.expires_in || 300,
+  };
 }
