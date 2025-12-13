@@ -7,12 +7,18 @@ import {
   getStockStream,
   searchStocks,
   getWatchlist,
+  getBrokerActivity,
   type StockbitAuthInfo,
+  type BrokerActivityOptions,
 } from "@/lib/stockbit/api";
 import {
   serializeWatchlist,
   serializeWatchlistSummary,
 } from "@/app/serializer/watchlist";
+import {
+  serializeBrokerActivity,
+  serializeBrokerActivitySummary,
+} from "@/app/serializer/broker";
 
 type DataType =
   | "profile"
@@ -23,7 +29,10 @@ type DataType =
   | "search"
   | "watchlist"
   | "watchlist-summary"
-  | "watchlist-raw";
+  | "watchlist-raw"
+  | "broker"
+  | "broker-summary"
+  | "broker-raw";
 
 /**
  * GET /api/scrape - Fetch stock data from Stockbit
@@ -165,6 +174,15 @@ interface ScrapeRequestBody {
   symbol?: string;
   query?: string;
   period?: "annual" | "quarterly";
+  // Broker activity params
+  brokerCode?: string;
+  page?: number;
+  limit?: number;
+  transactionType?: "TRANSACTION_TYPE_NET" | "TRANSACTION_TYPE_BUY" | "TRANSACTION_TYPE_SELL";
+  marketBoard?: "MARKET_BOARD_REGULER" | "MARKET_BOARD_TUNAI" | "MARKET_BOARD_NEGO";
+  investorType?: "INVESTOR_TYPE_ALL" | "INVESTOR_TYPE_DOMESTIC" | "INVESTOR_TYPE_FOREIGN";
+  startDate?: string; // Format: YYYY-MM-DD
+  endDate?: string;   // Format: YYYY-MM-DD
 }
 
 /**
@@ -174,15 +192,30 @@ interface ScrapeRequestBody {
  * - Authorization: Bearer <your_access_token> (required)
  *
  * Body (JSON):
- * - type: profile | quote | financials | keystats | stream | search | watchlist
+ * - type: profile | quote | financials | keystats | stream | search | watchlist | broker
  * - symbol: stock symbol (e.g., BBCA, TLKM)
  * - query: search query (for type=search)
  * - period: annual | quarterly (for type=financials)
+ * - brokerCode: broker code (e.g., XL, CC) for broker activity
+ * - page, limit, transactionType, marketBoard, investorType: broker filters
  */
 export async function POST(request: NextRequest) {
   try {
     const body: ScrapeRequestBody = await request.json();
-    const { type = "profile", symbol, query, period = "annual" } = body;
+    const {
+      type = "profile",
+      symbol,
+      query,
+      period = "annual",
+      brokerCode,
+      page = 1,
+      limit = 50,
+      transactionType = "TRANSACTION_TYPE_NET",
+      marketBoard = "MARKET_BOARD_REGULER",
+      investorType = "INVESTOR_TYPE_ALL",
+      startDate,
+      endDate,
+    } = body;
 
     // Get access token from Authorization header
     const authHeader = request.headers.get("Authorization");
@@ -286,6 +319,71 @@ export async function POST(request: NextRequest) {
         data = await getWatchlist(auth);
         console.log(data);
         break;
+
+      case "broker": {
+        if (!brokerCode) {
+          return NextResponse.json(
+            { error: "Broker code is required for broker activity" },
+            { status: 400 }
+          );
+        }
+        const brokerOptions: BrokerActivityOptions = {
+          brokerCode,
+          page,
+          limit,
+          transactionType,
+          marketBoard,
+          investorType,
+          startDate,
+          endDate,
+        };
+        const rawData = await getBrokerActivity(auth, brokerOptions);
+        data = serializeBrokerActivity(rawData);
+        break;
+      }
+
+      case "broker-summary": {
+        if (!brokerCode) {
+          return NextResponse.json(
+            { error: "Broker code is required for broker activity" },
+            { status: 400 }
+          );
+        }
+        const brokerOptions: BrokerActivityOptions = {
+          brokerCode,
+          page,
+          limit,
+          transactionType,
+          marketBoard,
+          investorType,
+          startDate,
+          endDate,
+        };
+        const rawData = await getBrokerActivity(auth, brokerOptions);
+        data = serializeBrokerActivitySummary(rawData);
+        break;
+      }
+
+      case "broker-raw": {
+        if (!brokerCode) {
+          return NextResponse.json(
+            { error: "Broker code is required for broker activity" },
+            { status: 400 }
+          );
+        }
+        const brokerOptions: BrokerActivityOptions = {
+          brokerCode,
+          page,
+          limit,
+          transactionType,
+          marketBoard,
+          investorType,
+          startDate,
+          endDate,
+        };
+        data = await getBrokerActivity(auth, brokerOptions);
+        break;
+      }
 
       default:
         return NextResponse.json(
