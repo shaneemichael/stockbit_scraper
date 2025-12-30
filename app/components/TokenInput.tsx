@@ -76,28 +76,6 @@ export default function TokenInput() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2 text-zinc-300">
-              Refresh Token
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={refreshToken}
-                onChange={(e) => setRefreshToken(e.target.value)}
-                placeholder="Paste your refresh token..."
-                className="flex-1 px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing || !refreshToken}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-zinc-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-              >
-                {refreshing ? "..." : "Refresh"}
-              </button>
-            </div>
-          </div>
-
           {message && (
             <p
               className={`text-sm ${

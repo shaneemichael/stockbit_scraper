@@ -76,10 +76,9 @@ export async function getStockQuote(auth: StockbitAuthInfo, symbol: string) {
 export async function getStockFinancials(
   auth: StockbitAuthInfo,
   symbol: string,
-  type: "annual" | "quarterly" = "annual"
 ) {
   const response = await fetch(
-    `${STOCKBIT_API_BASE}/v2.4/company/financials/${symbol}?type=${type}`,
+    `${STOCKBIT_API_BASE}/findata-view/company/financial?symbol=${symbol}&data_type=1&report_type=1&statement_type=1`,
     {
       method: "GET",
       headers: createAuthHeaders(auth),
@@ -229,6 +228,68 @@ export async function refreshAccessToken(
     refreshToken: data.data?.refresh_token || data.refresh_token,
     expiresIn: data.data?.expires_in || data.expires_in || 300,
   };
+}
+
+/**
+ * Insider activity options
+ */
+export interface InsiderActivityOptions {
+  page?: number;
+  limit?: number;
+  startDate?: string; // Format: YYYY-MM-DD
+  endDate?: string;   // Format: YYYY-MM-DD
+  actionType?: "ACTION_TYPE_UNSPECIFIED" | "ACTION_TYPE_BUY" | "ACTION_TYPE_SELL" | "ACTION_TYPE_TRANSFER";
+  sourceType?: "SOURCE_TYPE_UNSPECIFIED" | "SOURCE_TYPE_KSEI" | "SOURCE_TYPE_IDX";
+}
+
+/**
+ * Fetch insider/major holder activity
+ */
+export async function getInsiderActivity(
+  auth: StockbitAuthInfo,
+  options: InsiderActivityOptions
+) {
+  const {
+    page = 1,
+    limit = 20,
+    startDate,
+    endDate,
+    actionType = "ACTION_TYPE_UNSPECIFIED",
+    sourceType = "SOURCE_TYPE_UNSPECIFIED",
+  } = options;
+
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    action_type: actionType,
+    source_type: sourceType,
+  });
+
+  // Add date range if provided
+  if (startDate) {
+    params.set("date_start", startDate);
+  }
+  if (endDate) {
+    params.set("date_end", endDate);
+  }
+
+  const response = await fetch(
+    `${STOCKBIT_API_BASE}/insider/company/majorholder?${params}`,
+    {
+      method: "GET",
+      headers: createAuthHeaders(auth),
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error("Insider activity error response:", errorBody);
+    throw new Error(
+      `Failed to fetch insider activity: ${response.status} ${response.statusText}`
+    );
+  }
+
+  return response.json();
 }
 
 /**

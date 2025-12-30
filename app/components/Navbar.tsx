@@ -7,6 +7,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/pages/watchlist", label: "Watchlist" },
   { href: "/pages/broker", label: "Broker" },
+  { href: "/pages/insider", label: "Insider" },
   { href: "/pages/profile", label: "Profile" },
   { href: "/pages/quote", label: "Quote" },
   { href: "/pages/financials", label: "Financials" },

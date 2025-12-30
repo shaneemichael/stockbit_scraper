@@ -8,8 +8,10 @@ import {
   searchStocks,
   getWatchlist,
   getBrokerActivity,
+  getInsiderActivity,
   type StockbitAuthInfo,
   type BrokerActivityOptions,
+  type InsiderActivityOptions,
 } from "@/lib/stockbit/api";
 import {
   serializeWatchlist,
@@ -32,7 +34,8 @@ type DataType =
   | "watchlist-raw"
   | "broker"
   | "broker-summary"
-  | "broker-raw";
+  | "broker-raw"
+  | "insider";
 
 /**
  * GET /api/scrape - Fetch stock data from Stockbit
@@ -106,7 +109,7 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           );
         }
-        data = await getStockFinancials(auth, symbol, period);
+        data = await getStockFinancials(auth, symbol);
         break;
 
       case "keystats":
@@ -183,6 +186,9 @@ interface ScrapeRequestBody {
   investorType?: "INVESTOR_TYPE_ALL" | "INVESTOR_TYPE_DOMESTIC" | "INVESTOR_TYPE_FOREIGN";
   startDate?: string; // Format: YYYY-MM-DD
   endDate?: string;   // Format: YYYY-MM-DD
+  // Insider activity params
+  actionType?: "ACTION_TYPE_UNSPECIFIED" | "ACTION_TYPE_BUY" | "ACTION_TYPE_SELL" | "ACTION_TYPE_TRANSFER";
+  sourceType?: "SOURCE_TYPE_UNSPECIFIED" | "SOURCE_TYPE_KSEI" | "SOURCE_TYPE_IDX";
 }
 
 /**
@@ -192,12 +198,13 @@ interface ScrapeRequestBody {
  * - Authorization: Bearer <your_access_token> (required)
  *
  * Body (JSON):
- * - type: profile | quote | financials | keystats | stream | search | watchlist | broker
+ * - type: profile | quote | financials | keystats | stream | search | watchlist | broker | insider
  * - symbol: stock symbol (e.g., BBCA, TLKM)
  * - query: search query (for type=search)
  * - period: annual | quarterly (for type=financials)
  * - brokerCode: broker code (e.g., XL, CC) for broker activity
  * - page, limit, transactionType, marketBoard, investorType: broker filters
+ * - actionType, sourceType: insider filters
  */
 export async function POST(request: NextRequest) {
   try {
@@ -215,6 +222,8 @@ export async function POST(request: NextRequest) {
       investorType = "INVESTOR_TYPE_ALL",
       startDate,
       endDate,
+      actionType = "ACTION_TYPE_UNSPECIFIED",
+      sourceType = "SOURCE_TYPE_UNSPECIFIED",
     } = body;
 
     // Get access token from Authorization header
@@ -268,7 +277,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        data = await getStockFinancials(auth, symbol, period);
+        data = await getStockFinancials(auth, symbol);
         break;
 
       case "keystats":
@@ -382,6 +391,20 @@ export async function POST(request: NextRequest) {
           endDate,
         };
         data = await getBrokerActivity(auth, brokerOptions);
+        break;
+      }
+
+      case "insider": {
+        const insiderOptions: InsiderActivityOptions = {
+          page,
+          limit,
+          startDate,
+          endDate,
+          actionType,
+          sourceType,
+        };
+        const rawData = await getInsiderActivity(auth, insiderOptions);
+        data = rawData.data;
         break;
       }
 
