@@ -160,5 +160,3 @@ This is an unofficial tool and is not affiliated with or endorsed by Stockbit. U
 For issues, questions, or suggestions, please open an issue on the repository.
 
 ---
-
-Made with ❤️ by Shane Michael Tanata Tendy
