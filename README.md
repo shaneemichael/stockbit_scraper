@@ -99,11 +99,6 @@ Landing page with overview of all features and quick access links.
 - Financial metrics
 - Performance indicators
 
-### Stream (`/pages/stream`)
-- Community posts about stocks
-- User discussions
-- Market sentiment
-
 ## 🛠️ Tech Stack
 
 - **Framework:** Next.js 16.0 (App Router)
@@ -132,10 +127,7 @@ stockbit-scraper/
 │   │   ├── financials/
 │   │   ├── insider/
 │   │   ├── keystats/
-│   │   ├── profile/
-│   │   ├── quote/
 │   │   ├── search/
-│   │   ├── stream/
 │   │   └── watchlist/
 │   ├── serializers/      # Data serialization
 │   ├── globals.css       # Global styles

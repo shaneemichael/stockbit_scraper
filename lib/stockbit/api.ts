@@ -33,44 +33,6 @@ export function createAuthHeaders(auth: StockbitAuthInfo): HeadersInit {
 }
 
 /**
- * Fetch stock company profile
- */
-export async function getStockProfile(auth: StockbitAuthInfo, symbol: string) {
-  const response = await fetch(
-    `${STOCKBIT_API_BASE}/v2.4/company/profile/${symbol}`,
-    {
-      method: "GET",
-      headers: createAuthHeaders(auth),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch stock profile: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-/**
- * Fetch stock price/quote data
- */
-export async function getStockQuote(auth: StockbitAuthInfo, symbol: string) {
-  const response = await fetch(
-    `${STOCKBIT_API_BASE}/v2.4/quote/${symbol}`,
-    {
-      method: "GET",
-      headers: createAuthHeaders(auth),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch stock quote: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-/**
  * Fetch stock financial data
  */
 export async function getStockFinancials(
@@ -93,11 +55,11 @@ export async function getStockFinancials(
 }
 
 /**
- * Fetch stock key statistics
+ * Fetch stock key statistics (ratios)
  */
 export async function getStockKeyStats(auth: StockbitAuthInfo, symbol: string) {
   const response = await fetch(
-    `${STOCKBIT_API_BASE}/v2.4/company/keystats/${symbol}`,
+    `${STOCKBIT_API_BASE}/keystats/ratio/v1/${symbol}?year_limit=10`,
     {
       method: "GET",
       headers: createAuthHeaders(auth),
@@ -112,15 +74,11 @@ export async function getStockKeyStats(auth: StockbitAuthInfo, symbol: string) {
 }
 
 /**
- * Fetch stream/posts for a stock symbol
+ * Fetch stock price performance
  */
-export async function getStockStream(
-  auth: StockbitAuthInfo,
-  symbol: string,
-  limit: number = 20
-) {
+export async function getStockPricePerformance(auth: StockbitAuthInfo, symbol: string) {
   const response = await fetch(
-    `${STOCKBIT_API_BASE}/v2.4/stream/symbol/${symbol}?limit=${limit}`,
+    `${STOCKBIT_API_BASE}/company-price-feed/price-performance/${symbol}`,
     {
       method: "GET",
       headers: createAuthHeaders(auth),
@@ -128,7 +86,7 @@ export async function getStockStream(
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch stream: ${response.statusText}`);
+    throw new Error(`Failed to fetch price performance: ${response.statusText}`);
   }
 
   return response.json();

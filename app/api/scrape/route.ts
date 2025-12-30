@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getStockProfile,
-  getStockQuote,
   getStockFinancials,
   getStockKeyStats,
-  getStockStream,
+  getStockPricePerformance,
   searchStocks,
   getWatchlist,
   getBrokerActivity,
@@ -27,6 +25,7 @@ type DataType =
   | "quote"
   | "financials"
   | "keystats"
+  | "price-performance"
   | "stream"
   | "search"
   | "watchlist"
@@ -82,26 +81,6 @@ export async function GET(request: NextRequest) {
     let data;
 
     switch (type) {
-      case "profile":
-        if (!symbol) {
-          return NextResponse.json(
-            { error: "Symbol is required for profile" },
-            { status: 400 }
-          );
-        }
-        data = await getStockProfile(auth, symbol);
-        break;
-
-      case "quote":
-        if (!symbol) {
-          return NextResponse.json(
-            { error: "Symbol is required for quote" },
-            { status: 400 }
-          );
-        }
-        data = await getStockQuote(auth, symbol);
-        break;
-
       case "financials":
         if (!symbol) {
           return NextResponse.json(
@@ -122,14 +101,14 @@ export async function GET(request: NextRequest) {
         data = await getStockKeyStats(auth, symbol);
         break;
 
-      case "stream":
+      case "price-performance":
         if (!symbol) {
           return NextResponse.json(
-            { error: "Symbol is required for stream" },
+            { error: "Symbol is required for price-performance" },
             { status: 400 }
           );
         }
-        data = await getStockStream(auth, symbol);
+        data = await getStockPricePerformance(auth, symbol);
         break;
 
       case "search":
@@ -250,26 +229,6 @@ export async function POST(request: NextRequest) {
     let data;
 
     switch (type) {
-      case "profile":
-        if (!symbol) {
-          return NextResponse.json(
-            { error: "Symbol is required for profile" },
-            { status: 400 }
-          );
-        }
-        data = await getStockProfile(auth, symbol);
-        break;
-
-      case "quote":
-        if (!symbol) {
-          return NextResponse.json(
-            { error: "Symbol is required for quote" },
-            { status: 400 }
-          );
-        }
-        data = await getStockQuote(auth, symbol);
-        break;
-
       case "financials":
         if (!symbol) {
           return NextResponse.json(
@@ -290,14 +249,14 @@ export async function POST(request: NextRequest) {
         data = await getStockKeyStats(auth, symbol);
         break;
 
-      case "stream":
+      case "price-performance":
         if (!symbol) {
           return NextResponse.json(
-            { error: "Symbol is required for stream" },
+            { error: "Symbol is required for price-performance" },
             { status: 400 }
           );
         }
-        data = await getStockStream(auth, symbol);
+        data = await getStockPricePerformance(auth, symbol);
         break;
 
       case "search":

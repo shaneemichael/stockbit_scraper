@@ -8,11 +8,8 @@ const navItems = [
   { href: "/pages/watchlist", label: "Watchlist" },
   { href: "/pages/broker", label: "Broker" },
   { href: "/pages/insider", label: "Insider" },
-  { href: "/pages/profile", label: "Profile" },
-  { href: "/pages/quote", label: "Quote" },
   { href: "/pages/financials", label: "Financials" },
   { href: "/pages/keystats", label: "Key Stats" },
-  { href: "/pages/stream", label: "Stream" },
   { href: "/pages/search", label: "Search" },
 ];
 

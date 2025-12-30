@@ -160,20 +160,6 @@ export default function SearchPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={`/quote?symbol=${stock.symbol}`}
-                    className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-sm transition-colors"
-                  >
-                    Quote
-                  </Link>
-                  <Link
-                    href={`/profile?symbol=${stock.symbol}`}
-                    className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-sm transition-colors"
-                  >
-                    Profile
-                  </Link>
-                </div>
               </div>
             ))}
           </div>
