@@ -324,7 +324,7 @@ export default function InsiderPage() {
 
           {/* Movements Table */}
           <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-sc">
               <table className="w-full">
                 <thead className="bg-zinc-900">
                   <tr>

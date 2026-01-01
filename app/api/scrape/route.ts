@@ -3,14 +3,13 @@ import {
   getStockFinancials,
   getStockKeyStats,
   getStockPricePerformance,
-  searchStocks,
   getWatchlist,
   getBrokerActivity,
   getInsiderActivity,
   type StockbitAuthInfo,
   type BrokerActivityOptions,
   type InsiderActivityOptions,
-} from "@/lib/stockbit/api";
+} from "@/app/lib/api";
 import {
   serializeWatchlist,
   serializeWatchlistSummary,
@@ -109,16 +108,6 @@ export async function GET(request: NextRequest) {
           );
         }
         data = await getStockPricePerformance(auth, symbol);
-        break;
-
-      case "search":
-        if (!query) {
-          return NextResponse.json(
-            { error: "Query is required for search" },
-            { status: 400 }
-          );
-        }
-        data = await searchStocks(auth, query);
         break;
 
       case "watchlist": {
@@ -257,16 +246,6 @@ export async function POST(request: NextRequest) {
           );
         }
         data = await getStockPricePerformance(auth, symbol);
-        break;
-
-      case "search":
-        if (!query) {
-          return NextResponse.json(
-            { error: "Query is required for search" },
-            { status: 400 }
-          );
-        }
-        data = await searchStocks(auth, query);
         break;
 
       case "watchlist": {

@@ -6,27 +6,11 @@ import { useAuth } from "../context/AuthContext";
 export default function TokenInput() {
   const {
     accessToken,
-    refreshToken,
     setAccessToken,
-    setRefreshToken,
-    refreshAccessToken,
     isAuthenticated,
   } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState(!isAuthenticated);
-  const [message, setMessage] = useState("");
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setMessage("");
-    const success = await refreshAccessToken();
-    if (success) {
-      setMessage("Token refreshed successfully!");
-    } else {
-      setMessage("Failed to refresh token");
-    }
-    setRefreshing(false);
-  };
+  const [message, useMessage] = useState("");
 
   return (
     <div className="bg-zinc-800 rounded-lg border border-zinc-700 mb-6">

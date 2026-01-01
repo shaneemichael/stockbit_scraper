@@ -1,104 +1,16 @@
 "use client";
-
+import { POPULAR_STOCKS } from "../../consts/popularStocks";
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import TokenInput from "../../components/TokenInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
 
-interface ParsedTable {
-  headers: string[];
-  rows: string[][];
-}
-
 interface FinancialsResponse {
   data?: {
     html?: string;
     [key: string]: unknown;
   };
-}
-
-const POPULAR_STOCKS = [
-  { code: "BBCA", name: "Bank Central Asia" },
-  { code: "BBRI", name: "Bank Rakyat Indonesia" },
-  { code: "BMRI", name: "Bank Mandiri" },
-  { code: "TLKM", name: "Telkom Indonesia" },
-  { code: "ASII", name: "Astra International" },
-  { code: "UNVR", name: "Unilever Indonesia" },
-  { code: "ICBP", name: "Indofood CBP" },
-  { code: "GOTO", name: "GoTo Gojek Tokopedia" },
-];
-
-// Parse HTML table string into structured data
-function parseHtmlTable(html: string): ParsedTable[] {
-  const tables: ParsedTable[] = [];
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const tableElements = doc.querySelectorAll("table");
-
-  tableElements.forEach((table) => {
-    const headers: string[] = [];
-    const rows: string[][] = [];
-
-    // Parse headers from thead or first row
-    const headerRow = table.querySelector("thead tr") || table.querySelector("tr");
-    if (headerRow) {
-      const headerCells = headerRow.querySelectorAll("th, td");
-      headerCells.forEach((cell) => {
-        headers.push(cell.textContent?.trim() || "");
-      });
-    }
-
-    // Parse body rows
-    const bodyRows = table.querySelectorAll("tbody tr");
-    if (bodyRows.length > 0) {
-      bodyRows.forEach((row) => {
-        const cells: string[] = [];
-        row.querySelectorAll("td, th").forEach((cell) => {
-          cells.push(cell.textContent?.trim() || "");
-        });
-        if (cells.length > 0) {
-          rows.push(cells);
-        }
-      });
-    } else {
-      // If no tbody, get all tr except the header
-      const allRows = table.querySelectorAll("tr");
-      allRows.forEach((row, idx) => {
-        if (idx === 0 && headers.length > 0) return; // Skip header row
-        const cells: string[] = [];
-        row.querySelectorAll("td, th").forEach((cell) => {
-          cells.push(cell.textContent?.trim() || "");
-        });
-        if (cells.length > 0) {
-          rows.push(cells);
-        }
-      });
-    }
-
-    if (headers.length > 0 || rows.length > 0) {
-      tables.push({ headers, rows });
-    }
-  });
-
-  return tables;
-}
-
-// Try to find HTML content in the response recursively
-function findHtmlContent(obj: unknown): string | null {
-  if (typeof obj === "string") {
-    // Check if it looks like HTML
-    if (obj.includes("<table") || obj.includes("<tr") || obj.includes("<td")) {
-      return obj;
-    }
-  }
-  if (typeof obj === "object" && obj !== null) {
-    for (const value of Object.values(obj)) {
-      const found = findHtmlContent(value);
-      if (found) return found;
-    }
-  }
-  return null;
 }
 
 export default function FinancialsPage() {
@@ -151,7 +63,6 @@ export default function FinancialsPage() {
     }
   };
 
-  // Parse the HTML tables from the response
   const parsedTables = useMemo(() => {
     if (!financials) return [];
     const htmlContent = findHtmlContent(financials);
@@ -160,20 +71,6 @@ export default function FinancialsPage() {
   }, [financials]);
 
   const currentTable = parsedTables[activeTableIndex];
-
-  const formatValue = (value: string): string => {
-    if (!value || value === "-" || value === "") return "-";
-    // Try to parse as number
-    const cleaned = value.replace(/,/g, "").replace(/\s/g, "");
-    const num = parseFloat(cleaned);
-    if (!isNaN(num) && cleaned.match(/^-?\d+\.?\d*$/)) {
-      if (Math.abs(num) >= 1e12) return (num / 1e12).toFixed(2) + "T";
-      if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(2) + "B";
-      if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + "M";
-      return num.toLocaleString("id-ID");
-    }
-    return value;
-  };
 
   const getValueColor = (value: string, colIndex: number): string => {
     if (colIndex === 0) return "text-zinc-200"; // First column is label
@@ -299,9 +196,9 @@ export default function FinancialsPage() {
                         {currentTable.headers.map((header, idx) => (
                           <th
                             key={idx}
-                            className={`px-4 py-3 text-xs font-medium text-zinc-400 uppercase min-w-[120px] ${
+                            className={`px-4 py-3 text-xs font-medium text-zinc-400 uppercase min-w-120 ${
                               idx === 0
-                                ? "text-left sticky left-0 bg-zinc-900 min-w-[200px]"
+                                ? "text-left sticky left-0 bg-zinc-900 min-w-200"
                                 : "text-right"
                             }`}
                           >
@@ -336,7 +233,7 @@ export default function FinancialsPage() {
             <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
               <div className="p-4">
                 <p className="text-sm text-zinc-500 mb-2">Raw financial data:</p>
-                <pre className="text-sm text-zinc-300 whitespace-pre-wrap overflow-x-auto max-h-[500px]">
+                <pre className="text-sm text-zinc-300 whitespace-pre-wrap overflow-x-auto max-h-500">
                   {JSON.stringify(financials, null, 2)}
                 </pre>
               </div>
