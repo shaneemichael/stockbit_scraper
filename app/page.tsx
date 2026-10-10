@@ -1,39 +1,62 @@
 "use client";
 
 import Link from "next/link";
+import type { ComponentType, SVGProps } from "react";
 import TokenInput from "./components/TokenInput";
 import { useAuth } from "./context/AuthContext";
+import { PageHeader } from "./components/ui";
+import {
+  ArrowRightIcon,
+  BarChartIcon,
+  BuildingIcon,
+  FileTextIcon,
+  InfoIcon,
+  ListIcon,
+  SearchIcon,
+  UsersIcon,
+} from "./components/icons";
 
-const features = [
+const features: {
+  href: string;
+  title: string;
+  description: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+}[] = [
   {
     href: "/pages/watchlist",
-    title: "📋 Watchlist",
-    description: "View your watchlist stocks with real-time prices and changes",
+    title: "Watchlist",
+    description: "Your watchlist with live prices and daily change",
+    Icon: ListIcon,
   },
   {
     href: "/pages/broker",
-    title: "🏦 Broker Activity",
-    description: "View broker buy and sell transactions with detailed analytics",
+    title: "Broker Activity",
+    description: "Broker buy and sell transactions over a date range",
+    Icon: BuildingIcon,
   },
   {
-    href: "/pages/profile",
-    title: "🏢 Company Profile",
-    description: "Get detailed company information and background",
+    href: "/pages/insider",
+    title: "Insider Activity",
+    description: "Major shareholder movements from KSEI and IDX",
+    Icon: UsersIcon,
   },
   {
     href: "/pages/financials",
-    title: "📊 Financials",
-    description: "Explore financial statements and reports",
+    title: "Financials",
+    description: "Annual financial statements and reports",
+    Icon: FileTextIcon,
   },
   {
     href: "/pages/keystats",
-    title: "📈 Key Statistics",
-    description: "View key metrics like P/E, P/B, ROE, and more",
+    title: "Key Statistics",
+    description: "Valuation, profitability and growth ratios",
+    Icon: BarChartIcon,
   },
   {
     href: "/pages/search",
-    title: "🔍 Search",
-    description: "Search for stocks by name or symbol",
+    title: "Search",
+    description: "Find stocks by name or symbol",
+    Icon: SearchIcon,
   },
 ];
 
@@ -42,37 +65,41 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold mb-1">📈 Stockbit Scraper</h1>
-        <p className="text-zinc-400 text-sm">
-          Fetch and display data from Stockbit API with a clean interface
-        </p>
-      </div>
+      <PageHeader
+        title="Stockbit Scraper"
+        description="Fetch and browse Stockbit market data in one place."
+      />
 
       <TokenInput />
 
       {!isAuthenticated && (
-        <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-          <p className="text-yellow-300 text-sm">
-            <strong>⚠️ Note:</strong> Please enter your access token above to
-            start using the features. Get it from Stockbit&apos;s Local Storage
-            after logging in.
+        <div className="mb-6 flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-200">
+          <InfoIcon className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>
+            Enter your access token above to use the features. Click Guide in
+            the token panel to see where to find it.
           </p>
         </div>
       )}
 
-      <h2 className="text-lg font-semibold mb-3">Features</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {features.map((feature) => (
+      <h2 className="mb-3 text-sm font-medium text-zinc-400">Features</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {features.map(({ href, title, description, Icon }) => (
           <Link
-            key={feature.href}
-            href={feature.href}
-            className="block p-3 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-colors group"
+            key={href}
+            href={href}
+            className="group flex items-start gap-3 p-4 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <h3 className="text-base font-medium mb-0.5 group-hover:text-blue-400 transition-colors">
-              {feature.title}
-            </h3>
-            <p className="text-sm text-zinc-400">{feature.description}</p>
+            <span className="grid place-items-center w-9 h-9 shrink-0 rounded-lg bg-zinc-800 text-zinc-300 group-hover:text-blue-400 transition-colors">
+              <Icon className="w-[18px] h-[18px]" />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="flex items-center justify-between text-sm font-medium">
+                {title}
+                <ArrowRightIcon className="w-4 h-4 text-zinc-600 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition" />
+              </span>
+              <span className="mt-0.5 block text-sm text-zinc-500">{description}</span>
+            </span>
           </Link>
         ))}
       </div>

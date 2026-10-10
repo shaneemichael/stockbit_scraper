@@ -1,4 +1,4 @@
-function findHtmlContent(obj: unknown): string | null {
+export function findHtmlContent(obj: unknown): string | null {
   if (typeof obj === "string") {
     if (obj.includes("<table") || obj.includes("<tr") || obj.includes("<td")) {
       return obj;

@@ -60,7 +60,7 @@ npm start
 This app requires a Stockbit access token to fetch data from the API. 
 
 1. Enter your access token in the token input field (appears on every page)
-2. The token is stored in your browser's local storage
+2. The token is kept in memory only, never saved, and is cleared when you reload or close the tab
 3. All API requests use this token for authentication
 
 **Note:** The access token is stored client-side only and never sent to any third-party servers except Stockbit's API.

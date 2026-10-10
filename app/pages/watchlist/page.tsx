@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import TokenInput from "../../components/TokenInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
+import { Badge, Button, Card, EmptyState, PageHeader, Stat } from "../../components/ui";
 import type { SerializedStock } from "../../serializers/watchlist";
 
 interface WatchlistData {
@@ -16,91 +17,73 @@ interface WatchlistData {
 }
 
 function StockCard({ stock }: { stock: SerializedStock }) {
-  const changeColor = stock.isPositive
-    ? "text-green-400"
-    : stock.isNegative
-    ? "text-red-400"
-    : "text-zinc-400";
-
-  const changeBg = stock.isPositive
-    ? "bg-green-500/10"
-    : stock.isNegative
-    ? "bg-red-500/10"
-    : "bg-zinc-500/10";
+  const tone = stock.isPositive ? "up" : stock.isNegative ? "down" : "neutral";
+  const changeColor = {
+    up: "text-emerald-400",
+    down: "text-red-400",
+    neutral: "text-zinc-400",
+  }[tone];
+  const sign = stock.isPositive ? "+" : "";
+  const fmt = (n: number) => n.toLocaleString("id-ID");
 
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 hover:border-zinc-600 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
+    <Card className="p-4 hover:border-zinc-700 transition-colors">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           {stock.iconUrl && (
             <img
               src={stock.iconUrl}
-              alt={stock.symbol}
-              className="w-10 h-10 rounded-lg bg-zinc-700"
+              alt=""
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-lg bg-zinc-800 shrink-0"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
             />
           )}
-          <div>
-            <h3 className="font-semibold text-white">{stock.symbol}</h3>
-            <p className="text-xs text-zinc-500 line-clamp-1">{stock.name}</p>
+          <div className="min-w-0">
+            <h3 className="font-semibold">{stock.symbol}</h3>
+            <p className="text-xs text-zinc-500 truncate">{stock.name}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {stock.hasCorporateAction && (
-            <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
-              CA
-            </span>
-          )}
-          {stock.isUma && (
-            <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-              UMA
-            </span>
-          )}
+        <div className="flex gap-1 shrink-0">
+          {stock.hasCorporateAction && <Badge tone="amber">CA</Badge>}
+          {stock.isUma && <Badge tone="purple">UMA</Badge>}
         </div>
       </div>
 
-      <div className="flex items-end justify-between">
+      <div className="mt-4 flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold text-white">
-            {stock.lastPrice.toLocaleString("id-ID")}
-          </p>
-          <p className="text-xs text-zinc-500">
-            Vol: {stock.volumeFormatted}
-          </p>
+          <p className="text-2xl font-semibold tabular-nums">{fmt(stock.lastPrice)}</p>
+          <p className="text-xs text-zinc-500">Vol {stock.volumeFormatted}</p>
         </div>
-        <div className={`${changeBg} ${changeColor} px-3 py-1.5 rounded-lg text-right`}>
-          <p className="font-semibold">
-            {stock.isPositive ? "+" : ""}
-            {stock.change.toLocaleString("id-ID")}
+        <div className={`text-right tabular-nums ${changeColor}`}>
+          <p className="text-sm font-semibold">
+            {sign}
+            {fmt(stock.change)}
           </p>
           <p className="text-xs">
-            {stock.isPositive ? "+" : ""}
+            {sign}
             {stock.changePercent.toFixed(2)}%
           </p>
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-zinc-700 grid grid-cols-4 gap-2 text-xs">
-        <div>
-          <p className="text-zinc-500">Open</p>
-          <p className="text-zinc-300">{stock.openPrice.toLocaleString("id-ID")}</p>
-        </div>
-        <div>
-          <p className="text-zinc-500">High</p>
-          <p className="text-green-400">{stock.highPrice.toLocaleString("id-ID")}</p>
-        </div>
-        <div>
-          <p className="text-zinc-500">Low</p>
-          <p className="text-red-400">{stock.lowPrice.toLocaleString("id-ID")}</p>
-        </div>
-        <div>
-          <p className="text-zinc-500">Prev</p>
-          <p className="text-zinc-300">{stock.previousClose.toLocaleString("id-ID")}</p>
-        </div>
-      </div>
-    </div>
+      <dl className="mt-4 pt-3 border-t border-zinc-800 grid grid-cols-4 gap-2 text-xs tabular-nums">
+        {[
+          ["Open", stock.openPrice],
+          ["High", stock.highPrice],
+          ["Low", stock.lowPrice],
+          ["Prev", stock.previousClose],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-zinc-500">{label}</dt>
+            <dd className="text-zinc-300">{fmt(value as number)}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
   );
 }
 
@@ -156,22 +139,20 @@ export default function WatchlistPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">📋 My Watchlist</h1>
-        <p className="text-zinc-400">
-          View your watchlist stocks with real-time prices
-        </p>
-      </div>
+      <PageHeader
+        title="Watchlist"
+        description="Your watchlist stocks with live prices."
+      />
 
       <TokenInput />
 
-      <button
+      <Button
         onClick={fetchWatchlist}
         disabled={loading || !isAuthenticated}
-        className="mb-6 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+        className="mb-6"
       >
-        {loading ? "Loading..." : "Fetch Watchlist"}
-      </button>
+        {loading ? "Loading..." : "Fetch watchlist"}
+      </Button>
 
       {error && (
         <div className="mb-6">
@@ -183,45 +164,28 @@ export default function WatchlistPage() {
 
       {watchlist && !loading && (
         <>
-          {/* Header */}
-          <div className="mb-6 p-4 bg-zinc-800 border border-zinc-700 rounded-lg">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">{watchlist.name}</h2>
-                <p className="text-sm text-zinc-400">
-                  {watchlist.totalStocks} stocks
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <div className="text-center">
-                  <p className="text-xl font-bold text-green-400">
-                    {stats?.gainers}
-                  </p>
-                  <p className="text-xs text-zinc-500">Gainers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold text-red-400">
-                    {stats?.losers}
-                  </p>
-                  <p className="text-xs text-zinc-500">Losers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold text-zinc-400">
-                    {stats?.unchanged}
-                  </p>
-                  <p className="text-xs text-zinc-500">Unchanged</p>
-                </div>
-              </div>
+          <Card className="mb-6 p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-semibold">{watchlist.name}</h2>
+              <p className="text-sm text-zinc-500">{watchlist.totalStocks} stocks</p>
             </div>
-          </div>
+            <div className="flex gap-8 text-center">
+              <Stat label="Gainers" value={stats?.gainers} tone="up" />
+              <Stat label="Losers" value={stats?.losers} tone="down" />
+              <Stat label="Unchanged" value={stats?.unchanged} />
+            </div>
+          </Card>
 
-          {/* Stock Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {watchlist.stocks.map((stock) => (
               <StockCard key={stock.symbol} stock={stock} />
             ))}
           </div>
         </>
+      )}
+
+      {!watchlist && !loading && !error && (
+        <EmptyState>Click Fetch watchlist to load your stocks.</EmptyState>
       )}
     </div>
   );

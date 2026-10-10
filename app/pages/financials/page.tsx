@@ -1,10 +1,14 @@
 "use client";
 import { POPULAR_STOCKS } from "../../consts/popularStocks";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import TokenInput from "../../components/TokenInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
+import { Button, Card, ChipGroup, EmptyState, PageHeader, inputClass, rowClass, thClass } from "../../components/ui";
+import { findHtmlContent } from "../../utils/findHtmlObject";
+import { formatValue } from "../../utils/formatValue";
+import { parseHtmlTable } from "../../utils/parseHtmlTable";
 
 interface FinancialsResponse {
   data?: {
@@ -78,63 +82,47 @@ export default function FinancialsPage() {
     const cleaned = value.replace(/,/g, "").replace(/\s/g, "");
     const num = parseFloat(cleaned);
     if (isNaN(num)) return "text-zinc-300";
-    if (num > 0) return "text-green-400";
+    if (num > 0) return "text-emerald-400";
     if (num < 0) return "text-red-400";
     return "text-zinc-300";
   };
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">📊 Financial Data</h1>
-        <p className="text-zinc-400">
-          Explore financial statements and reports
-        </p>
-      </div>
+      <PageHeader
+        title="Financials"
+        description="Annual financial statements and reports."
+      />
 
       <TokenInput />
 
-      {/* Search and Period Selection */}
-      <div className="space-y-4 mb-6">
-        <div className="flex flex-wrap gap-2">
-          <div className="flex-1 max-w-xs">
-            <input
-              type="text"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="Enter stock symbol (e.g., BBCA)"
-              className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={fetchFinancials}
-            disabled={loading || !isAuthenticated}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-          >
-            {loading ? "Loading..." : "Fetch Financials"}
-          </button>
-        </div>
-      </div>
+      <form
+        className="mb-4 flex flex-wrap gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          fetchFinancials();
+        }}
+      >
+        <input
+          type="text"
+          aria-label="Stock symbol"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+          placeholder="Symbol, e.g. BBCA"
+          className={`${inputClass} w-full max-w-xs font-mono uppercase`}
+        />
+        <Button type="submit" disabled={loading || !isAuthenticated}>
+          {loading ? "Loading..." : "Fetch financials"}
+        </Button>
+      </form>
 
-      {/* Popular Stocks */}
       <div className="mb-6">
-        <p className="text-sm text-zinc-500 mb-2">Popular stocks:</p>
-        <div className="flex flex-wrap gap-2">
-          {POPULAR_STOCKS.map((stock) => (
-            <button
-              key={stock.code}
-              onClick={() => setSymbol(stock.code)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                symbol === stock.code
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700"
-              }`}
-              title={stock.name}
-            >
-              {stock.code}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          label="Popular"
+          options={POPULAR_STOCKS.map((s) => ({ value: s.code, label: s.code, title: s.name }))}
+          value={symbol}
+          onChange={setSymbol}
+        />
       </div>
 
       {error && (
@@ -146,60 +134,35 @@ export default function FinancialsPage() {
       {loading && <LoadingSpinner />}
 
       {financials && !loading && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold">{symbol}</h2>
-                <p className="text-zinc-400">
-                  Annual Financial Statements
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <span
-                  className={`px-3 py-1 text-sm rounded-lg "bg-purple-500/20 text-purple-400"
-                  }`}
-                >
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="space-y-4">
+          <Card className="p-5">
+            <h2 className="text-xl font-semibold">{symbol}</h2>
+            <p className="text-sm text-zinc-500">Annual financial statements</p>
+          </Card>
 
-          {/* Table Tabs - if multiple tables found */}
           {parsedTables.length > 1 && (
-            <div className="flex flex-wrap gap-2">
-              {parsedTables.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveTableIndex(idx)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    activeTableIndex === idx
-                      ? "bg-blue-600 text-white"
-                      : "bg-zinc-800 text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  Table {idx + 1}
-                </button>
-              ))}
-            </div>
+            <ChipGroup
+              label="Table"
+              options={parsedTables.map((_, idx) => ({ value: String(idx), label: `Table ${idx + 1}` }))}
+              value={String(activeTableIndex)}
+              onChange={(v) => setActiveTableIndex(Number(v))}
+            />
           )}
 
-          {/* Financial Data Table */}
           {currentTable && currentTable.rows.length > 0 ? (
-            <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
+            <Card className="overflow-hidden">
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full">
+                <table className="w-full text-sm">
                   {currentTable.headers.length > 0 && (
-                    <thead className="bg-zinc-900">
+                    <thead className="border-b border-zinc-800">
                       <tr>
                         {currentTable.headers.map((header, idx) => (
                           <th
                             key={idx}
-                            className={`px-4 py-3 text-xs font-medium text-zinc-400 uppercase min-w-120 ${
+                            className={`${thClass} ${
                               idx === 0
-                                ? "text-left sticky left-0 bg-zinc-900 min-w-200"
-                                : "text-right"
+                                ? "text-left sticky left-0 z-10 bg-zinc-900 min-w-[220px]"
+                                : "text-right min-w-[120px] bg-zinc-950/60"
                             }`}
                           >
                             {header}
@@ -208,16 +171,16 @@ export default function FinancialsPage() {
                       </tr>
                     </thead>
                   )}
-                  <tbody className="divide-y divide-zinc-700">
+                  <tbody className="divide-y divide-zinc-800">
                     {currentTable.rows.map((row, rowIdx) => (
-                      <tr key={rowIdx} className="hover:bg-zinc-750">
+                      <tr key={rowIdx} className={rowClass}>
                         {row.map((cell, cellIdx) => (
                           <td
                             key={cellIdx}
-                            className={`px-4 py-3 ${
+                            className={`px-4 py-2.5 ${
                               cellIdx === 0
-                                ? "sticky left-0 bg-zinc-800 font-medium text-zinc-200"
-                                : `text-right font-mono ${getValueColor(cell, cellIdx)}`
+                                ? "sticky left-0 bg-zinc-900 text-zinc-200"
+                                : `text-right font-mono tabular-nums ${getValueColor(cell, cellIdx)}`
                             }`}
                           >
                             {cellIdx === 0 ? cell : formatValue(cell)}
@@ -228,28 +191,22 @@ export default function FinancialsPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           ) : parsedTables.length === 0 ? (
-            <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
-              <div className="p-4">
-                <p className="text-sm text-zinc-500 mb-2">Raw financial data:</p>
-                <pre className="text-sm text-zinc-300 whitespace-pre-wrap overflow-x-auto max-h-500">
-                  {JSON.stringify(financials, null, 2)}
-                </pre>
-              </div>
-            </div>
+            <Card className="p-4">
+              <p className="mb-2 text-xs text-zinc-500">No table found. Raw response:</p>
+              <pre className="max-h-[500px] overflow-auto custom-scrollbar text-xs text-zinc-300 whitespace-pre-wrap">
+                {JSON.stringify(financials, null, 2)}
+              </pre>
+            </Card>
           ) : (
-            <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-8 text-center">
-              <p className="text-zinc-500">No data available in this table</p>
-            </div>
+            <EmptyState>No data in this table.</EmptyState>
           )}
         </div>
       )}
 
       {!financials && !loading && !error && (
-        <p className="text-zinc-500 text-center py-8">
-          Select a stock and click Fetch Financials to see financial statements
-        </p>
+        <EmptyState>Pick a stock and click Fetch financials to see its statements.</EmptyState>
       )}
     </div>
   );

@@ -1,9 +1,9 @@
-interface ParsedTable {
+export interface ParsedTable {
   headers: string[];
   rows: string[][];
 }
 
-function parseHtmlTable(html: string): ParsedTable[] {
+export function parseHtmlTable(html: string): ParsedTable[] {
   const tables: ParsedTable[] = [];
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");

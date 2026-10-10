@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import TokenInput from "../../components/TokenInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
+import { Badge, Button, Card, ChipGroup, DateRange, EmptyState, PageHeader, Stat, daysAgo, inputClass, rowClass, thClass, today } from "../../components/ui";
 
 interface BrokerTransaction {
   stockCode: string;
@@ -39,18 +40,6 @@ const POPULAR_BROKERS = [
   { code: "GR", name: "Sinarmas Sekuritas" },
 ];
 
-// Get today and 7 days ago as default date range
-const getDefaultDates = () => {
-  const today = new Date();
-  const weekAgo = new Date();
-  weekAgo.setDate(today.getDate() - 7);
-  
-  return {
-    endDate: today.toISOString().split("T")[0],
-    startDate: weekAgo.toISOString().split("T")[0],
-  };
-};
-
 export default function BrokerPage() {
   const { accessToken, isAuthenticated } = useAuth();
   const [brokerCode, setBrokerCode] = useState("XL");
@@ -59,10 +48,8 @@ export default function BrokerPage() {
   const [data, setData] = useState<BrokerSummary | null>(null);
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
   
-  // Date range state
-  const defaultDates = getDefaultDates();
-  const [startDate, setStartDate] = useState(defaultDates.startDate);
-  const [endDate, setEndDate] = useState(defaultDates.endDate);
+  const [startDate, setStartDate] = useState(() => daysAgo(7));
+  const [endDate, setEndDate] = useState(today);
 
   const fetchBrokerActivity = async () => {
     if (!accessToken) {
@@ -121,100 +108,56 @@ export default function BrokerPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">🏦 Broker Activity</h1>
-        <p className="text-zinc-400">
-          View broker buy and sell transactions
-        </p>
-      </div>
+      <PageHeader
+        title="Broker Activity"
+        description="Broker buy and sell transactions over a date range."
+      />
 
       <TokenInput />
 
-      {/* Search and Date Range */}
-      <div className="space-y-4 mb-6">
-        {/* Broker Code and Fetch Button */}
+      <form
+        className="mb-4 space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          fetchBrokerActivity();
+        }}
+      >
         <div className="flex flex-wrap gap-2">
-          <div className="flex-1 max-w-xs">
-            <input
-              type="text"
-              value={brokerCode}
-              onChange={(e) => setBrokerCode(e.target.value.toUpperCase())}
-              placeholder="Enter broker code (e.g., XL)"
-              className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={fetchBrokerActivity}
-            disabled={loading || !isAuthenticated}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-          >
-            {loading ? "Loading..." : "Fetch Activity"}
-          </button>
+          <input
+            type="text"
+            aria-label="Broker code"
+            value={brokerCode}
+            onChange={(e) => setBrokerCode(e.target.value.toUpperCase())}
+            placeholder="Broker code, e.g. XL"
+            className={`${inputClass} w-full max-w-xs font-mono uppercase`}
+          />
+          <Button type="submit" disabled={loading || !isAuthenticated}>
+            {loading ? "Loading..." : "Fetch activity"}
+          </Button>
         </div>
+        <DateRange
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+          }}
+          presets={[
+            { label: "1D", days: 1 },
+            { label: "1W", days: 7 },
+            { label: "1M", days: 30 },
+            { label: "3M", days: 90 },
+          ]}
+        />
+      </form>
 
-        {/* Date Range */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm text-zinc-400">Date range:</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-            <span className="text-zinc-500">to</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
-          {/* Quick date presets */}
-          <div className="flex gap-1">
-            {[
-              { label: "1D", days: 1 },
-              { label: "1W", days: 7 },
-              { label: "1M", days: 30 },
-              { label: "3M", days: 90 },
-            ].map(({ label, days }) => (
-              <button
-                key={label}
-                onClick={() => {
-                  const end = new Date();
-                  const start = new Date();
-                  start.setDate(end.getDate() - days);
-                  setEndDate(end.toISOString().split("T")[0]);
-                  setStartDate(start.toISOString().split("T")[0]);
-                }}
-                className="px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded transition-colors"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Popular Brokers */}
       <div className="mb-6">
-        <p className="text-sm text-zinc-500 mb-2">Popular brokers:</p>
-        <div className="flex flex-wrap gap-2">
-          {POPULAR_BROKERS.map((broker) => (
-            <button
-              key={broker.code}
-              onClick={() => setBrokerCode(broker.code)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                brokerCode === broker.code
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700"
-              }`}
-              title={broker.name}
-            >
-              {broker.code}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          label="Popular"
+          options={POPULAR_BROKERS.map((b) => ({ value: b.code, label: b.code, title: b.name }))}
+          value={brokerCode}
+          onChange={setBrokerCode}
+        />
       </div>
 
       {error && (
@@ -226,142 +169,79 @@ export default function BrokerPage() {
       {loading && <LoadingSpinner />}
 
       {data && !loading && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold">{data.brokerCode}</h2>
-                <p className="text-zinc-400">{data.brokerName}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-6 text-center">
-                <div>
-                  <p className="text-sm text-zinc-500">Total Buy</p>
-                  <p className="text-xl font-bold text-green-400">
-                    {data.totalBuyValue}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-500">Total Sell</p>
-                  <p className="text-xl font-bold text-red-400">
-                    {data.totalSellValue}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-500">Net</p>
-                  <p
-                    className={`text-xl font-bold ${
-                      data.netValue.startsWith("-")
-                        ? "text-red-400"
-                        : "text-green-400"
-                    }`}
-                  >
-                    {data.netValue}
-                  </p>
-                </div>
-              </div>
+        <div className="space-y-4">
+          <Card className="p-5 flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-semibold">{data.brokerCode}</h2>
+              <p className="text-sm text-zinc-500">{data.brokerName}</p>
             </div>
-          </div>
+            <div className="grid grid-cols-3 gap-8">
+              <Stat label="Total buy" value={data.totalBuyValue} tone="up" />
+              <Stat label="Total sell" value={data.totalSellValue} tone="down" />
+              <Stat
+                label="Net"
+                value={data.netValue}
+                tone={data.netValue.startsWith("-") ? "down" : "up"}
+              />
+            </div>
+          </Card>
 
-          {/* Tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab("buy")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === "buy"
-                  ? "bg-green-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white"
-              }`}
-            >
-              Buy ({data.buys.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("sell")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === "sell"
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white"
-              }`}
-            >
-              Sell ({data.sells.length})
-            </button>
-          </div>
+          <ChipGroup
+            options={[
+              { value: "buy" as const, label: `Buy (${data.buys.length})` },
+              { value: "sell" as const, label: `Sell (${data.sells.length})` },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
 
-          {/* Transactions Table */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-zinc-900">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
-                      Stock
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
-                      Type
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-zinc-400 uppercase">
-                      Lot
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-zinc-400 uppercase">
-                      Value
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-zinc-400 uppercase">
-                      Avg Price
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-700">
-                  {transactions.map((tx, index) => (
-                    <tr
-                      key={`${tx.stockCode}-${index}`}
-                      className="hover:bg-zinc-750"
-                    >
-                      <td className="px-4 py-3">
-                        <span className="font-medium">{tx.stockCode}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded ${
-                            tx.type === "Asing"
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "bg-blue-500/20 text-blue-400"
+          {transactions.length > 0 ? (
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-sm">
+                  <thead className="bg-zinc-950/60 border-b border-zinc-800">
+                    <tr>
+                      <th className={`${thClass} text-left`}>Stock</th>
+                      <th className={`${thClass} text-left`}>Type</th>
+                      <th className={`${thClass} text-right`}>Lot</th>
+                      <th className={`${thClass} text-right`}>Value</th>
+                      <th className={`${thClass} text-right`}>Avg price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {transactions.map((tx, index) => (
+                      <tr key={`${tx.stockCode}-${index}`} className={rowClass}>
+                        <td className="px-4 py-2.5 font-medium">{tx.stockCode}</td>
+                        <td className="px-4 py-2.5">
+                          <Badge tone={tx.type === "Asing" ? "purple" : "blue"}>{tx.type}</Badge>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono tabular-nums text-zinc-300">
+                          {formatLot(tx.lot)}
+                        </td>
+                        <td
+                          className={`px-4 py-2.5 text-right font-mono tabular-nums ${
+                            activeTab === "buy" ? "text-emerald-400" : "text-red-400"
                           }`}
                         >
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono">
-                        {formatLot(tx.lot)}
-                      </td>
-                      <td
-                        className={`px-4 py-3 text-right font-mono font-medium ${
-                          activeTab === "buy" ? "text-green-400" : "text-red-400"
-                        }`}
-                      >
-                        {tx.valueFormatted}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-zinc-300">
-                        {tx.avgPriceFormatted}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {transactions.length === 0 && (
-            <p className="text-center text-zinc-500 py-8">
-              No {activeTab} transactions found
-            </p>
+                          {tx.valueFormatted}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono tabular-nums text-zinc-300">
+                          {tx.avgPriceFormatted}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ) : (
+            <EmptyState>No {activeTab} transactions in this range.</EmptyState>
           )}
         </div>
       )}
 
       {!data && !loading && !error && (
-        <p className="text-zinc-500 text-center py-8">
-          Select a broker and click Fetch Activity to see transactions
-        </p>
+        <EmptyState>Pick a broker and click Fetch activity to see transactions.</EmptyState>
       )}
     </div>
   );

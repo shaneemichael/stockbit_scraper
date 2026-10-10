@@ -5,7 +5,8 @@ import { useAuth } from "../../context/AuthContext";
 import TokenInput from "../../components/TokenInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
-import Link from "next/link";
+import { Badge, Button, Card, EmptyState, PageHeader, inputClass } from "../../components/ui";
+import { SearchIcon } from "../../components/icons";
 
 interface SearchResult {
   symbol: string;
@@ -25,6 +26,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchedQuery, setSearchedQuery] = useState("");
 
   const searchStocks = async () => {
     if (!accessToken) {
@@ -59,6 +61,7 @@ export default function SearchPage() {
       // Handle different response structures
       const data = json.data?.data || json.data?.results || json.data || [];
       setResults(Array.isArray(data) ? data : []);
+      setSearchedQuery(query);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -66,39 +69,34 @@ export default function SearchPage() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      searchStocks();
-    }
-  };
-
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">🔍 Search Stocks</h1>
-        <p className="text-zinc-400">Search for stocks by name or symbol</p>
-      </div>
+      <PageHeader title="Search" description="Find stocks by name or symbol." />
 
       <TokenInput />
 
-      {/* Search */}
-      <div className="flex gap-2 mb-6">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search stocks (e.g., bank, technology, BBCA)"
-          className="flex-1 max-w-lg px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={searchStocks}
-          disabled={loading || !isAuthenticated}
-          className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-        >
+      <form
+        className="flex gap-2 mb-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          searchStocks();
+        }}
+      >
+        <div className="relative flex-1 max-w-lg">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+          <input
+            type="search"
+            aria-label="Search stocks"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="bank, technology, BBCA..."
+            className={`${inputClass} w-full pl-9`}
+          />
+        </div>
+        <Button type="submit" disabled={loading || !isAuthenticated}>
           {loading ? "Searching..." : "Search"}
-        </button>
-      </div>
+        </Button>
+      </form>
 
       {error && (
         <div className="mb-6">
@@ -109,88 +107,67 @@ export default function SearchPage() {
       {loading && <LoadingSpinner />}
 
       {results.length > 0 && !loading && (
-        <div className="space-y-2">
-          <p className="text-sm text-zinc-500 mb-4">
-            Found {results.length} results
-          </p>
-
+        <div>
+          <p className="mb-3 text-sm text-zinc-500">{results.length} results</p>
           <div className="grid gap-2">
             {results.map((stock, index) => (
-              <div
+              <Card
                 key={stock.symbol || index}
-                className="bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg p-4 flex items-center gap-4 transition-colors"
+                className="p-4 flex items-center gap-4 hover:border-zinc-700 transition-colors"
               >
                 {stock.icon_url && (
                   <img
                     src={stock.icon_url}
-                    alt={stock.symbol}
-                    className="w-12 h-12 rounded-lg bg-zinc-700"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-lg bg-zinc-800 shrink-0"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-lg">{stock.symbol}</span>
-                    {stock.exchange && (
-                      <span className="text-xs bg-zinc-700 text-zinc-400 px-2 py-0.5 rounded">
-                        {stock.exchange}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{stock.symbol}</span>
+                    {stock.exchange && <Badge>{stock.exchange}</Badge>}
                     {stock.type && stock.type !== "stock" && (
-                      <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                        {stock.type}
-                      </span>
+                      <Badge tone="purple">{stock.type}</Badge>
                     )}
                   </div>
-                  <p className="text-zinc-400 text-sm truncate">{stock.name}</p>
+                  <p className="text-sm text-zinc-400 truncate">{stock.name}</p>
                   {(stock.sector || stock.industry) && (
-                    <div className="flex gap-2 mt-1">
-                      {stock.sector && (
-                        <span className="text-xs text-zinc-500">
-                          {stock.sector}
-                        </span>
-                      )}
-                      {stock.industry && (
-                        <span className="text-xs text-zinc-600">
-                          • {stock.industry}
-                        </span>
-                      )}
-                    </div>
+                    <p className="mt-0.5 text-xs text-zinc-500 truncate">
+                      {[stock.sector, stock.industry].filter(Boolean).join(" · ")}
+                    </p>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
-      {results.length === 0 && !loading && !error && query && (
-        <p className="text-zinc-500 text-center py-8">
-          No results found for &quot;{query}&quot;
-        </p>
+      {results.length === 0 && !loading && !error && searchedQuery && (
+        <EmptyState>No results for &quot;{searchedQuery}&quot;</EmptyState>
       )}
 
-      {!query && !loading && (
-        <div className="text-center py-12">
-          <p className="text-zinc-500 mb-4">
-            Enter a search term to find stocks
-          </p>
+      {!query && !searchedQuery && !loading && (
+        <EmptyState>
+          <p className="mb-4">Enter a search term, or try one of these:</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["bank", "mining", "technology", "consumer", "property"].map(
-              (term) => (
-                <button
-                  key={term}
-                  onClick={() => setQuery(term)}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-full text-sm text-zinc-400 hover:text-white transition-colors"
-                >
-                  {term}
-                </button>
-              )
-            )}
+            {["bank", "mining", "technology", "consumer", "property"].map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => setQuery(term)}
+                className="h-8 px-3 rounded-full border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 cursor-pointer transition-colors"
+              >
+                {term}
+              </button>
+            ))}
           </div>
-        </div>
+        </EmptyState>
       )}
     </div>
   );

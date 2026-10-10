@@ -1,4 +1,4 @@
-function formatValue(value: string): string {
+export function formatValue(value: string): string {
     if (!value || value === "-" || value === "") return "-";
     const cleaned = value.replace(/,/g, "").replace(/\s/g, "");
     const num = parseFloat(cleaned);

@@ -2,77 +2,58 @@
 
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { ChevronDownIcon, LockIcon, UnlockIcon } from "./icons";
+import TokenGuide from "./TokenGuide";
+import { inputClass } from "./ui";
 
 export default function TokenInput() {
-  const {
-    accessToken,
-    setAccessToken,
-    isAuthenticated,
-  } = useAuth();
+  const { accessToken, setAccessToken, isAuthenticated } = useAuth();
   const [expanded, setExpanded] = useState(!isAuthenticated);
-  const [message, useMessage] = useState("");
 
   return (
-    <div className="bg-zinc-800 rounded-lg border border-zinc-700 mb-6">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {isAuthenticated ? "🔓 Authenticated" : "🔒 Authentication Required"}
-          </span>
-          {isAuthenticated && (
-            <span className="text-xs text-zinc-500">
-              (click to {expanded ? "hide" : "show"})
-            </span>
-          )}
-        </div>
-        <svg
-          className={`w-4 h-4 text-zinc-400 transition-transform ${
-            expanded ? "rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-xl">
+      <div className="flex items-center gap-1 pr-2">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          aria-controls="token-panel"
+          className="flex-1 min-w-0 px-4 h-12 flex items-center justify-between gap-2 text-left cursor-pointer"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
+          <span className="flex items-center gap-2 text-sm font-medium">
+            {isAuthenticated ? (
+              <UnlockIcon className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <LockIcon className="w-4 h-4 text-amber-400" />
+            )}
+            {isAuthenticated ? "Authenticated" : "Access token required"}
+          </span>
+          <ChevronDownIcon
+            className={`w-4 h-4 text-zinc-500 transition-transform ${expanded ? "rotate-180" : ""}`}
           />
-        </svg>
-      </button>
+        </button>
+        <span className="w-px h-5 bg-zinc-800" aria-hidden="true" />
+        <TokenGuide />
+      </div>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-zinc-700 pt-4">
-          <div>
-            <label className="block text-sm font-medium mb-2 text-zinc-300">
-              Access Token
-            </label>
-            <input
-              type="text"
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              placeholder="Paste your access token..."
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {message && (
-            <p
-              className={`text-sm ${
-                message.includes("success") ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {message}
-            </p>
-          )}
-
+        <div id="token-panel" className="px-4 pb-4 pt-3 border-t border-zinc-800 space-y-2">
+          <label htmlFor="access-token" className="block text-xs font-medium text-zinc-400">
+            Access token
+          </label>
+          <input
+            id="access-token"
+            type="text"
+            spellCheck={false}
+            autoComplete="off"
+            value={accessToken}
+            onChange={(e) => setAccessToken(e.target.value)}
+            placeholder="Paste your access token"
+            className={`${inputClass} w-full font-mono`}
+          />
           <p className="text-xs text-zinc-500">
-            Get tokens from Stockbit: DevTools → Application → Local Storage →
-            persist:root → auth
+            Your token isn&apos;t saved: it stays in this tab&apos;s memory and is cleared
+            on reload. Not sure where to find it? Open the Guide above.
           </p>
         </div>
       )}
