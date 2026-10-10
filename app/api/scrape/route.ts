@@ -18,6 +18,7 @@ import {
   serializeBrokerActivity,
   serializeBrokerActivitySummary,
 } from "@/app/serializers/broker";
+import { getDemoData, isDemoMode } from "@/app/lib/demo/fixtures";
 
 type DataType =
   | "profile"
@@ -214,6 +215,10 @@ export async function POST(request: NextRequest) {
     const auth: StockbitAuthInfo = {
       accessToken,
     };
+
+    if (isDemoMode) {
+      return NextResponse.json({ success: true, data: getDemoData(body) });
+    }
 
     let data;
 

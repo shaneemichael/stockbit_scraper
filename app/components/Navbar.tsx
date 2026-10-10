@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TrendingUpIcon } from "./icons";
+import { isDemoMode } from "../lib/demo/mode";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -17,29 +19,41 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center h-14 gap-8 overflow-x-auto">
+    <nav className="sticky top-0 z-50 bg-zinc-950/85 backdrop-blur border-b border-zinc-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center h-14 gap-6 overflow-x-auto custom-scrollbar">
           <Link
             href="/"
-            className="text-lg font-bold text-white whitespace-nowrap"
+            className="flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
           >
-            📈 Stockbit
+            <span className="grid place-items-center w-7 h-7 rounded-md bg-blue-600 text-white">
+              <TrendingUpIcon className="w-4 h-4" />
+            </span>
+            Stockbit Scraper
+            {isDemoMode && (
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] font-medium uppercase tracking-wide text-amber-300">
+                Demo data
+              </span>
+            )}
           </Link>
           <div className="flex gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                  pathname === item.href
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap transition-colors ${
+                    active
+                      ? "bg-zinc-800 text-white font-medium"
+                      : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
